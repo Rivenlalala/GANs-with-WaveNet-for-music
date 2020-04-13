@@ -1,4 +1,5 @@
 # Wavenet
+
 * [Deepmind Blog](https://deepmind.com/blog/article/wavenet-generative-model-raw-audio)
 * [Paper](./1609.03499.pdf)
 * [Detail & Chainer implementation Blog](http://sergeiturukin.com/2017/03/02/wavenet.html)
@@ -9,3 +10,5 @@
 * [Pytorch implementation 1(长长长)](https://github.com/vincentherrmann/pytorch-wavenet)
 * [Pytorch implementation 2(Blog)](https://www.pytorchtutorial.com/pytorch-wavenet/)
 >* [Code](https://github.com/odie2630463/WaveNet)
+* [music artist classifier with wavenet](./2004.04371.pdf)
+> Generative model to discriminative model
