@@ -1,4 +1,4 @@
-#Wavenet
+# Wavenet
 * [Deepmind Blog](https://deepmind.com/blog/article/wavenet-generative-model-raw-audio)
 * [Paper](./1609.03499.pdf)
 * [Detail & Chainer implementation Blog](http://sergeiturukin.com/2017/03/02/wavenet.html)
