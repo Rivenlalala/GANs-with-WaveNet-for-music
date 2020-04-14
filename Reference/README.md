@@ -7,8 +7,16 @@
 >* [Gated PixelCNN](http://sergeiturukin.com/2017/02/24/gated-pixelcnn.html)
 >* [dilated convolutions](./1511.07122.pdf)
 >* [Modified Wavenet details in Appedices](./1702.07825.pdf)
+
 * [Pytorch implementation 1(长长长)](https://github.com/vincentherrmann/pytorch-wavenet)
 * [Pytorch implementation 2(Blog)](https://www.pytorchtutorial.com/pytorch-wavenet/)
 >* [Code](https://github.com/odie2630463/WaveNet)
+
 * [music artist classifier with wavenet](./2004.04371.pdf)
 > Generative model to discriminative model
+
+* [ADAPTIVE WAVENET VOCODER FOR RESIDUAL COMPENSATION IN GAN-BASED VOICE CONVERSION](./vocoder.pdf)
+
+# GAN
+
+* [overview](./GAN-Overview-Chinese.pdf)
