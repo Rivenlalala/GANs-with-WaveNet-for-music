@@ -20,3 +20,7 @@
 # GAN
 
 * [overview](./GAN-Overview-Chinese.pdf)
+* [Paper](./1406.2661.pdf)
+* [DCGAN](./1511.06434.pdf)
+* [waveGAN](./1802.04208.pdf)
+* [GANSynth](./1902.08710.pdf)
