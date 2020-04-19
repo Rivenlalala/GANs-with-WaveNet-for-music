@@ -109,7 +109,7 @@ class WaveNet(nn.Module):
 
         outputs = sum([s[:, :, -outputs.size(2):] for s in skip_connections])
         outputs = self.post(outputs)
-        return outputs
+        return outputs[:, :, :-1]
 
     def preprocess(self, inputs):
         out = self.pre_conv(inputs)

@@ -14,12 +14,13 @@ model = WaveNet().cuda()
 train_step = optim.Adam(model.parameters(), lr=2e-3, eps=1e-4)
 scheduler = optim.lr_scheduler.MultiStepLR(train_step, milestones=[50,150,250], gamma=0.5)
 
-for epoch in range(5):
+for epoch in range(100):
     running_loss = 0.0
     for index, (data, target, _) in enumerate(training_data):
         data = Variable(data.type(torch.FloatTensor)).cuda()
         logits = model(data)
-        y = target[:, :, -logits.size(2):].view(1, -1).cuda()
+        y = target[:, :, 5116:].view(1, -1).cuda()
+
         loss = F.cross_entropy(logits, y).cuda()
         train_step.zero_grad()
         loss.backward()
