@@ -3,6 +3,7 @@ import torch
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 import torchaudio
+import pydub
 
 
 def one_hot_encode(data, channels=256):
@@ -23,10 +24,11 @@ def one_hot_decode(data, axis=1):
 
 class Piano(Dataset):
 
-    def __init__(self, data_dir='./Dataset/', in_depth=256, sample_rate=4000):
+    def __init__(self, data_dir='./Dataset/', in_depth=256, length=8, sample_rate=4000):
         self.data_dir = data_dir
         self.in_depth = in_depth
         self.sample_rate = sample_rate
+        self.length = length
 
     def __len__(self):
         return len([file for file in os.listdir(self.data_dir)])
@@ -34,6 +36,7 @@ class Piano(Dataset):
     def __getitem__(self, item):
         filename = os.path.join(self.data_dir, str(item) + '.mp3')
         waveform, sample_rate_old = torchaudio.load(filename)
+        waveform = waveform[:, -self.length * sample_rate_old:]
         waveform_downsample = torchaudio.transforms.Resample(sample_rate_old, self.sample_rate)(waveform)
         waveform_mulaw = torchaudio.transforms.MuLawEncoding(self.in_depth)(waveform_downsample)
         one_hot = one_hot_encode(waveform_mulaw, channels=self.in_depth)

@@ -79,7 +79,7 @@ class ResidualBlock(torch.nn.Module):
 
 
 class WaveNet(nn.Module):
-    def __init__(self, in_depth=256, res_channels=32, skip_channels=512, dilation_depth=10, n_repeat=5):
+    def __init__(self, in_depth=256, res_channels=32, skip_channels=512, dilation_depth=8, n_repeat=5):
         """
         input: Tensor[batch, channel, length]
         Args:
@@ -109,7 +109,7 @@ class WaveNet(nn.Module):
 
         outputs = sum([s[:, :, -outputs.size(2):] for s in skip_connections])
         outputs = self.post(outputs)
-        return outputs[:, :, :-1]
+        return outputs
 
     def preprocess(self, inputs):
         out = self.pre_conv(inputs)
