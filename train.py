@@ -12,7 +12,7 @@ recp_field = 1276  # 5116 for (10, 5)
 
 
 piano = Piano(data_dir='./Dataset_4s/', length=4)
-training_data = DataLoader(piano, batch_size=3, shuffle=True)
+training_data = DataLoader(piano, batch_size=2, shuffle=True)
 model = WaveNet().cuda()
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
@@ -29,16 +29,12 @@ for epoch in range(20000):
         loss.backward()
         optimizer.step()
         running_loss += loss.item()
-
     print("[%d %.3f]" % (epoch + 1, running_loss / (index+1)))
 
-    if epoch % 10 == 9:
+    if epoch % 100 == 99:
+        print("[%d %.3f]" % (epoch + 1, running_loss / (index+1)))
         torch.save({'epoch': epoch + 1,
                     'state_dict': model.state_dict(),
                     'optimizer': optimizer.state_dict()}, 'checkpoint.pth')
-        torch.save(model.state_dict(), 'wavenet.pth')
-        print("checkpoint saved")
-
-
 print('finished')
 
