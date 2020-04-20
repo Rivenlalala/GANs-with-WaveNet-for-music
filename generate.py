@@ -9,7 +9,7 @@ import numpy as np
 
 from torch.utils.data import DataLoader
 
-piano = Piano()
+piano = Piano(data_dir='./Dataset_4s/', length=4)
 
 def one_hot_encode(data, channels=256):
     data = data.numpy()
@@ -32,14 +32,16 @@ model = WaveNet().cuda()
 checkpoint = torch.load('checkpoint.pth')
 model.load_state_dict(checkpoint['state_dict'])
 
+song = 0
 with torch.no_grad():
-    for seed, _, audio in seedloader:
-        seed = Variable(seed[:, :, 5000:recp_field + 5000].type(torch.FloatTensor)).cuda()
+    for seed, audio, _ in seedloader:
+        seed = Variable(seed[:, :, :recp_field].type(torch.FloatTensor)).cuda()
         #sample = Variable(sample.type(torch.FloatTensor)).cuda()
         output = seed
         for index in range(sample_len):
-            #print(sample[:, :, -10:].argmax(1))
             new = model(seed)
+            target = audio[:, :, recp_field + index].cuda()
+            loss = F.cross_entropy(new, target).item()
             new_mag = new.argmax().item()
             new = new.new_zeros(new.size())
             new[:, new_mag] = 1
@@ -47,13 +49,14 @@ with torch.no_grad():
             seed = output[:, :, -recp_field:]
             if index % 100 == 99:
                 print(index + 1)
-        break
+        song += 1
+        sample = output.squeeze()
+        sample = sample.argmax(0)
+        sample = torchaudio.transforms.MuLawDecoding(256)(sample)
 
-sample = output.squeeze()
-sample = sample.argmax(0)
-sample = torchaudio.transforms.MuLawDecoding(256)(sample)
-
-torchaudio.save('1.wav', sample.cpu(), 4000, 16)
+        torchaudio.save('{}.wav'.format(song), sample.cpu(), 4000, 16)
+        if song > 5:
+            break
 
 
 
