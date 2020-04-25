@@ -116,3 +116,41 @@ class WaveNet(nn.Module):
         # out = out.transpose(1, 2)
         # out = self.pre_conv(out)
         return out
+
+class GenLSTM(nn.Module):
+
+    def __init__(self, in_depth=256, length=5, stride=500):
+        '''
+        input: Tensor[batch, time_step, input_size]
+        Args:
+            in_depth:
+            length:
+            stride:
+        '''
+
+        super(GenLSTM, self).__init__()
+        self.length = length
+        self.stride = stride
+        self.main = nn.LSTM(in_depth, in_depth, batch_first=True)
+
+    def preprocess(self, inputs):
+        inputs = inputs.permute(0, 2, 1)
+        out = inputs[:, 0:-1:self.stride, :]
+        return out
+
+    def forward(self, inputs):
+        output, h = self.main(inputs)
+        return output
+
+class DisLSTM(nn.Module):
+    def __init__(self, in_depth=256):
+        super(DisLSTM, self).__init__()
+        self.main = nn.LSTM(in_depth, in_depth, batch_first=True)
+        self.out = nn.Sequential(nn.Linear(in_depth, 1),
+                                 nn.Sigmoid())
+
+
+    def forward(self, inputs):
+        r_out, _ = self.main(inputs)
+        output = self.out(r_out[:, -1, :])
+        return output
