@@ -12,8 +12,6 @@ recp_field = 1276
 sample_len = 4000 * 8
 
 netW = WaveNet(dilation_depth=8).cuda()
-for param in netW.parameters():
-    param.requires_grad = False
 netG = GenLSTM(stride=500).double().cuda()
 netD = DisLSTM().double().cuda()
 optimizerD = optim.Adam(netD.parameters(), lr=1e-3)
@@ -34,32 +32,32 @@ def wavenetGen(batch_size=5, sample_len=4, recp_field=1276):
         if i >= batch_size:
             break
         seed = seed[:, :, 500:recp_field + 500].float().cuda()
-        # sample = Variable(sample.type(torch.FloatTensor)).cuda()
         output = seed
-        r_input = seed[:, :, -1]
-        r_input = r_input.unsqueeze(0).double()
+        # r_input = seed[:, :, -1]
+        # r_input = r_input.unsqueeze(0).double()
         for index in range(sample_len * 4000):
             new = netW(seed)
             p = torch.distributions.categorical.Categorical(logits=new.squeeze())
             new_mag = p.sample()
             new = new.zero_()
             new[:, new_mag] = 1
+            '''
             if index % 500 == 499:
                 r_new = netG(r_input)
                 r_new = r_new[:, -1, :]
                 r_new_mag = r_new.argmax(1)
                 r_new = r_new.zero_()
                 r_new[:, r_new_mag] = 1
-                r_input = torch.cat((r_input.float(), new.permute(0, 2, 1).detach()), dim=1)
+                r_input = torch.cat((r_input, new.permute(0, 2, 1).detach().double()), dim=1)
                 output = torch.cat((output, r_new.view(1, 256, 1).float()), dim=2)
             else:
-                output = torch.cat((output, new.view(1, 256, 1)), dim=2)
+            '''
+            output = torch.cat((output, new.view(1, 256, 1)), dim=2)
             seed = output[:, :, -recp_field:]
         if i == 0:
             sample = output
         else:
             sample = torch.cat((sample, output), dim=0)
-        print(i)
     return sample
 
 
@@ -67,8 +65,6 @@ for epoch in range(100):
     for i, (data, _, _) in enumerate(dataloader):
         # update D
         # real batch
-        print('updating D')
-        print('real batch')
         netD.zero_grad()
         data = data[:, :, 0:-1:500].cuda()
         real = data.permute(0, 2, 1).double() # input: Tensor[batch, time_Step, in_depth]
@@ -79,8 +75,6 @@ for epoch in range(100):
         errD_real.backward()
 
         # fake batch
-        print('fake batch')
-        print('generating')
         fake = wavenetGen()
         fake = fake.double()
         fake = netG(fake)
