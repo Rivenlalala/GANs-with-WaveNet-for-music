@@ -74,12 +74,12 @@ def wavenetGen(batch_size=5, sample_len=4, recp_field=1276):
             seed = output[:, :, -recp_field:]
         if i == 0:
             sample = output
-            # r_sample = r_output.unsqueeze(0)nv
+            r_sample = r_output.unsqueeze(0)nv
         else:
             sample = torch.cat((sample, output), dim=0)
-            # r_sample = torch.cat((r_sample, r_output.unsqueeze(0)), dim=0)
+            r_sample = torch.cat((r_sample, r_output.unsqueeze(0)), dim=0)
         print(i)
-    return sample
+    return r_sample, sample
 
 
 for epoch in range(100):
@@ -120,3 +120,10 @@ for epoch in range(100):
 
         print('[%d/500][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f'
               % (epoch, i, len(dataloader), errD.item(), errG.item()))
+    if epoch % 10 == 9:
+        torch.save({"epoch": epoch + 1,
+                    "state_dict": netD.state_dict(),
+                    "optimizer": optimizerD.state_dict()}, 'netD.pth')
+        torch.save({'epoch': epoch + 1,
+                    'state_dict': netG.state_dict(),
+                    'optimizer': optimizerG.state_dict()}, 'netG.pth')
