@@ -21,7 +21,7 @@ optimizerD = optim.Adam(netD.parameters(), lr=1e-3)
 optimizerG = optim.Adam(netG.parameters(), lr=1e-3)
 
 piano = Piano(data_dir='./Dataset_4s', length=4, sample_rate=4000)
-dataloader = DataLoader(piano, batch_size=5, shuffle=True)
+dataloader = DataLoader(piano, batch_size=2, shuffle=True)
 seedloader = DataLoader(piano, batch_size=1, shuffle=True)
 
 checkpoint = torch.load('checkpoint.pth')
@@ -31,10 +31,11 @@ criterion = nn.BCELoss()
 #frame = inspect.currentframe()
 #gpu_tracker = MemTracker(frame)
 
-def wavenetGen(batch_size=5, sample_len=4, recp_field=1276):
+def wavenetGen(batch_size=2, sample_len=4, recp_field=1276):
     for i, (seed, _, _) in enumerate(seedloader):
         if i >= batch_size:
             break
+        print('Generating sample', i)
         seed = seed[:, :, 500:recp_field + 500].float().cuda()
         # sample = Variable(sample.type(torch.FloatTensor)).cuda()
         output = seed
@@ -46,7 +47,7 @@ def wavenetGen(batch_size=5, sample_len=4, recp_field=1276):
             new_mag = p.sample()
             new = new.zero_()
             new[:, new_mag] = 1
-            if index % 500 == 499:
+            if index % 50 == 49:
                 r_input = new.squeeze(2)
                 try:
                     h, c = netG(r_input, (h, c))
@@ -64,21 +65,20 @@ def wavenetGen(batch_size=5, sample_len=4, recp_field=1276):
                     r_new[:, r_new_mag] = 1
                 # r_input = torch.cat((r_input, new.permute(0, 2, 1).detach().double()), dim=1)
                     r_output = torch.cat((r_output, r_new.unsqueeze(0)), dim=1)
-                print("r_output added")
                 output = torch.cat((output, r_new.view(1, 256, 1).float()), dim=2)
             else:
 
                 output = torch.cat((output, new.view(1, 256, 1)), dim=2)
-            if index % 100 == 99:
-                print(index)
             seed = output[:, :, -recp_field:]
+        h = 0
+        c = 0
         if i == 0:
             sample = output
-            r_sample = r_output.unsqueeze(0)nv
+            r_sample = r_output
         else:
             sample = torch.cat((sample, output), dim=0)
-            r_sample = torch.cat((r_sample, r_output.unsqueeze(0)), dim=0)
-        print(i)
+            r_sample = torch.cat((r_sample, r_output), dim=0)
+
     return r_sample, sample
 
 
@@ -87,25 +87,25 @@ for epoch in range(100):
         # update D
         # real batch
         print('updating D')
-        print('real batch')
         netD.zero_grad()
-        data = data[:, :, 0:-1:500].cuda()
+        data = data[:, :, 0:-1:50].cuda()
         real = data.permute(0, 2, 1).double()  # input: Tensor[batch, time_Step, in_depth]
         b_size = real.size(0)
         label = torch.full((b_size, 1), 1).double().cuda()
         output = netD(real)
         errD_real = criterion(output, label)
         errD_real.backward()
+        D_x = output.mean().item()
 
         # fake batch
-        print('fake batch')
-        print('generating')
         fake, _ = wavenetGen()
         fake = fake.double()
-        label.fill_(0)
         output = netD(fake.detach())
+        b_size = fake.size(0)
+        label = label.new_zeros((b_size, 1))
         errD_fake = criterion(output, label)
         errD_fake.backward()
+        D_G_z1 = output.mean().item()
         errD = errD_fake + errD_real
         optimizerD.step()
 
@@ -116,10 +116,12 @@ for epoch in range(100):
         output = netD(fake)
         errG = criterion(output, label)
         errG.backward()
+        D_G_z2 = output.mean().item()
         optimizerG.step()
+        print('[%d/100][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
+            % (epoch, i, len(dataloader),
+               errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
 
-        print('[%d/500][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f'
-              % (epoch, i, len(dataloader), errD.item(), errG.item()))
     if epoch % 10 == 9:
         torch.save({"epoch": epoch + 1,
                     "state_dict": netD.state_dict(),
