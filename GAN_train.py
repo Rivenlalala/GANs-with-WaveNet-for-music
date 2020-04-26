@@ -7,8 +7,6 @@ from model import WaveNet, GenLSTM, DisLSTM
 from data import Piano
 import torchaudio
 import numpy as np
-import inspect
-from gpu_mem_track import  MemTracker
 
 recp_field = 1276
 sample_len = 4000 * 8
@@ -66,13 +64,15 @@ def wavenetGen(batch_size=5, sample_len=4, recp_field=1276):
                     r_new[:, r_new_mag] = 1
                 # r_input = torch.cat((r_input, new.permute(0, 2, 1).detach().double()), dim=1)
                     r_output = torch.cat((r_output, r_new.unsqueeze(0)), dim=1)
+                print("r_output added")
                 output = torch.cat((output, r_new.view(1, 256, 1).float()), dim=2)
             else:
                 output = torch.cat((output, new.view(1, 256, 1)), dim=2)
+            print("index")
             seed = output[:, :, -recp_field:]
         if i == 0:
             sample = output
-            # r_sample = r_output.unsqueeze(0)
+            # r_sample = r_output.unsqueeze(0)nv
         else:
             sample = torch.cat((sample, output), dim=0)
             # r_sample = torch.cat((r_sample, r_output.unsqueeze(0)), dim=0)
