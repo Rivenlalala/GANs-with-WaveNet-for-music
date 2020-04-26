@@ -67,8 +67,10 @@ def wavenetGen(batch_size=5, sample_len=4, recp_field=1276):
                 print("r_output added")
                 output = torch.cat((output, r_new.view(1, 256, 1).float()), dim=2)
             else:
+
                 output = torch.cat((output, new.view(1, 256, 1)), dim=2)
-            print("index")
+            if index % 100 == 99:
+                print(index)
             seed = output[:, :, -recp_field:]
         if i == 0:
             sample = output
