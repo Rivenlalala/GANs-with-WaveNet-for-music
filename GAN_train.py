@@ -7,6 +7,8 @@ from model import WaveNet, GenLSTM, DisLSTM
 from data import Piano
 import torchaudio
 import numpy as np
+import inspect
+from gpu_mem_track import  MemTracker
 
 recp_field = 1276
 sample_len = 4000 * 8
@@ -28,7 +30,8 @@ checkpoint = torch.load('checkpoint.pth')
 netW.load_state_dict(checkpoint['state_dict'])
 
 criterion = nn.BCELoss()
-
+#frame = inspect.currentframe()
+#gpu_tracker = MemTracker(frame)
 
 def wavenetGen(batch_size=5, sample_len=4, recp_field=1276):
     for i, (seed, _, _) in enumerate(seedloader):
@@ -40,7 +43,7 @@ def wavenetGen(batch_size=5, sample_len=4, recp_field=1276):
         # r_input = seed[:, :, -1]
         # r_input = r_input.unsqueeze(0).double()
         for index in range(sample_len * 4000):
-            new = netW(seed)
+            new = netW(seed.detach())
             p = torch.distributions.categorical.Categorical(logits=new.squeeze())
             new_mag = p.sample()
             new = new.zero_()
@@ -69,12 +72,12 @@ def wavenetGen(batch_size=5, sample_len=4, recp_field=1276):
             seed = output[:, :, -recp_field:]
         if i == 0:
             sample = output
-            r_sample = r_output.unsqueeze(0)
+            # r_sample = r_output.unsqueeze(0)
         else:
             sample = torch.cat((sample, output), dim=0)
-            r_sample = torch.cat((r_sample, r_output.unsqueeze(0)), dim=0)
+            # r_sample = torch.cat((r_sample, r_output.unsqueeze(0)), dim=0)
         print(i)
-    return r_sample, sample
+    return sample
 
 
 for epoch in range(100):
